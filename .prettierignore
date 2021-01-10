@@ -1,0 +1,8 @@
+*.md
+
+addon/*
+
+_locales/*/messages.json
+!_locales/en/messages.json
+
+.github/workflows/*
