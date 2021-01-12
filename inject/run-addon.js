@@ -22,6 +22,8 @@ const MAIN_JS = "userscript.js";
 const path = document.querySelector("script[id='devtools-extension-module'").getAttribute("data-path");
 const scriptUrl = `${path}addon/${MAIN_JS}`;
 
+const language = `; ${document.cookie}`.split("; scratchlanguage=").pop().split(";").shift() || navigator.language;
+
 const addon = {
   self: {
     isDevtoolsExtension: true,
