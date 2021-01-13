@@ -5,5 +5,6 @@ addon/*
 images/*
 inject/l10n.js
 l10n/*
+_locales/*
 
 .github/workflows/*
