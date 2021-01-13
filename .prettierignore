@@ -1,8 +1,9 @@
+libraries/*
 *.md
 
 addon/*
-
-_locales/*/messages.json
-!_locales/en/messages.json
+images/*
+inject/l10n.js
+l10n/*
 
 .github/workflows/*
