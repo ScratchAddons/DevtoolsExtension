@@ -8,7 +8,7 @@ export default async function ({ addon, global, console, msg, safeMsg: m }) {
 
   // 0-indexed 6 = July
   const releaseDate = new Date(2020, 6, 4);
-  const releaseDateLocalized = new Intl.DateTimeFormat(scratchAddons.l10n.locale).format(releaseDate);
+  const releaseDateLocalized = new Intl.DateTimeFormat(/* TODO scratchAddons.l10n.locale */navigator.language).format(releaseDate);
 
   const helpHTML = `
 <div id="s3devHelpPop">

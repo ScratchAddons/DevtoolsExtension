@@ -17,8 +17,9 @@
     {
       "run_at": "document_start",
       "matches": ["https://scratch.mit.edu/projects/*", "https://llk.github.io/scratch-gui/*"],
-      "js": ["run-inject.js"]
+      "js": ["run-inject.js"],
+      "css": ["addon/userscript.css"]
     }
   ],
-  "web_accessible_resources": ["addon/*", "images/*", "inject/*"]
+  "web_accessible_resources": ["addon/*", "images/*", "inject/*", "libraries/*", "l10n/*"]
 }
