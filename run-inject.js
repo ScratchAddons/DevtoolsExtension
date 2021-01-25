@@ -10,6 +10,7 @@ else {
 }
 
 function onHeadAvailable() {
+  document.head.classList.add("griffpatchDevtoolsExtensionEnabled");
   const script = document.createElement("script");
   script.id = "devtools-extension-module";
   script.setAttribute("data-path", chrome.runtime.getURL(""));
