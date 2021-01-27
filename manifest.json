@@ -1,0 +1,25 @@
+{
+  "manifest_version": 2,
+  "name": "__MSG_extensionName__",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
+  "author": "Griffpatch",
+  "version": "1.8.0",
+  "homepage_url": "https://www.griffpatch.co.uk",
+  "icons": {
+    "32": "images/favicon.png",
+    "128": "images/bigIcon.png"
+  },
+  "browser_action": {
+    "default_icon": "images/favicon.png"
+  },
+  "content_scripts": [
+    {
+      "run_at": "document_start",
+      "matches": ["https://scratch.mit.edu/projects/*", "https://llk.github.io/scratch-gui/*"],
+      "js": ["run-inject.js"],
+      "css": ["addon/userscript.css"]
+    }
+  ],
+  "web_accessible_resources": ["addon/*", "images/*", "inject/*", "libraries/*", "l10n/*"]
+}
