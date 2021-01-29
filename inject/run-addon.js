@@ -36,6 +36,55 @@ const addon = {
         },
       },
     },
+    scratchClass(...args) {
+      const classNamesArr = [
+        ...new Set(
+          [...document.styleSheets]
+          .filter(
+            (styleSheet) =>
+              !(
+                styleSheet.ownerNode.textContent.startsWith(
+                  "/* DO NOT EDIT\n@todo This file is copied from GUI and should be pulled out into a shared library."
+                ) &&
+                (styleSheet.ownerNode.textContent.includes("input_input-form") ||
+                  styleSheet.ownerNode.textContent.includes("label_input-group_"))
+              )
+            .map((e) => {
+              try {
+                return [...e.cssRules];
+              } catch (e) {
+                return [];
+              }
+            })
+            .flat()
+            .map((e) => e.selectorText)
+            .filter((e) => e)
+            .map((e) => e.match(/(([\w-]+?)_([\w-]+)_([\w\d-]+))/g))
+            .filter((e) => e)
+            .flat()
+        ),
+      ];
+      let res = "";
+      args
+        .filter((arg) => typeof arg === "string")
+        .forEach((classNameToFind) => {
+          res +=
+            classNamesArr.find(
+              (className) =>
+                className.startsWith(classNameToFind + "_") && className.length === classNameToFind.length + 6
+            ) || "";
+          res += " ";
+        });
+      if (typeof args[args.length - 1] === "object") {
+        const options = args[args.length - 1];
+        const classNames = Array.isArray(options.others) ? options.others : [options.others];
+        classNames.forEach((string) => (res += string + " "));
+      }
+      res = res.slice(0, -1);
+      // Sanitize just in case
+      res = res.replace(/"/g, "");
+      return res;
+    },
   },
 };
 
