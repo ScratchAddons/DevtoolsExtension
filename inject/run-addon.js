@@ -6,49 +6,31 @@ const path = document.querySelector("script[id='devtools-extension-module']").ge
 const getURL = (x) => `${path}${x}`;
 const scriptUrl = getURL(`addon/${MAIN_JS}`);
 
-let scratchVm;
-const oldPrototypes = {
-  functionBind: Function.prototype.bind,
-};
-Function.prototype.bind = function (...args) {
-  if (
-    args[0] &&
-    Object.prototype.hasOwnProperty.call(args[0], "editingTarget") &&
-    Object.prototype.hasOwnProperty.call(args[0], "runtime")
-  ) {
-    scratchVm = args[0];
-    Function.prototype.bind = oldPrototypes.functionBind;
-    return oldPrototypes.functionBind.apply(this, args);
-  } else {
-    return oldPrototypes.functionBind.apply(this, args);
-  }
-};
-
 const addon = {
   self: {
     _isDevtoolsExtension: true,
   },
   tab: {
     traps: {
-      onceValues: {
-        get vm() {
-          return scratchVm;
-        },
+      get vm() {
+        return Object.values(document.querySelector('div[class^="stage-wrapper_stage-wrapper_"]')).find((x) => x.child)
+          .child.child.child.stateNode.props.vm;
       },
     },
     scratchClass(...args) {
       const classNamesArr = [
         ...new Set(
           [...document.styleSheets]
-          .filter(
-            (styleSheet) =>
-              !(
-                styleSheet.ownerNode.textContent.startsWith(
-                  "/* DO NOT EDIT\n@todo This file is copied from GUI and should be pulled out into a shared library."
-                ) &&
-                (styleSheet.ownerNode.textContent.includes("input_input-form") ||
-                  styleSheet.ownerNode.textContent.includes("label_input-group_"))
-              )
+            .filter(
+              (styleSheet) =>
+                !(
+                  styleSheet.ownerNode.textContent.startsWith(
+                    "/* DO NOT EDIT\n@todo This file is copied from GUI and should be pulled out into a shared library."
+                  ) &&
+                  (styleSheet.ownerNode.textContent.includes("input_input-form") ||
+                    styleSheet.ownerNode.textContent.includes("label_input-group_"))
+                )
+            )
             .map((e) => {
               try {
                 return [...e.cssRules];
@@ -105,13 +87,16 @@ const msg = (key, placeholders) => l10nObject.get(`editor-devtools/${key}`, plac
 msg.locale = langCode;
 
 l10nObject.loadByAddonId("editor-devtools").then(() =>
-  import(scriptUrl).then((module) =>
-    module.default({
-      addon,
-      global: {},
-      console,
-      msg,
-      safeMsg: (key, placeholders) => l10nObject.escaped(`editor-devtools/${key}`, placeholders),
-    })
-  )
+  import(scriptUrl).then((module) => {
+    const run = () =>
+      module.default({
+        addon,
+        global: {},
+        console,
+        msg,
+        safeMsg: (key, placeholders) => l10nObject.escaped(`editor-devtools/${key}`, placeholders),
+      });
+    if (document.readyState === "complete") run();
+    else window.addEventListener("load", () => run(), { once: true });
+  })
 );
