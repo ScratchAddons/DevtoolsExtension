@@ -10,8 +10,6 @@ else {
 }
 
 function onHeadAvailable() {
-  document.head.classList.add("griffpatchDevtoolsExtensionEnabled");
-
   // Wait until <title> element exists to make sure Scratch <style>s were injected,
   // which are necessary for addon.tab.scratchClass() calls.
   const titleObserver = new MutationObserver(() => {

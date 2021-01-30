@@ -1,5 +1,8 @@
 import Localization from "./l10n.js";
 
+// Make sure SA lower than v1.9.0 doesn't run editor-devtools
+window.initGUI = true;
+
 const MAIN_JS = "userscript.js";
 
 const path = document.querySelector("script[id='devtools-extension-module']").getAttribute("data-path");
@@ -88,7 +91,12 @@ msg.locale = langCode;
 
 l10nObject.loadByAddonId("editor-devtools").then(() =>
   import(scriptUrl).then((module) => {
-    const run = () =>
+    const loaded = () => {
+      // Remove SA CSS that might affect ours if versions don't match
+      const styles = document.querySelector("link[rel=stylesheet][href$='addons/editor-devtools/userscript.css']");
+      if (styles) styles.remove();
+
+      // Run
       module.default({
         addon,
         global: {},
@@ -96,7 +104,8 @@ l10nObject.loadByAddonId("editor-devtools").then(() =>
         msg,
         safeMsg: (key, placeholders) => l10nObject.escaped(`editor-devtools/${key}`, placeholders),
       });
-    if (document.readyState === "complete") run();
-    else window.addEventListener("load", () => run(), { once: true });
+    };
+    if (document.readyState === "complete") loaded();
+    else window.addEventListener("load", () => loaded(), { once: true });
   })
 );
