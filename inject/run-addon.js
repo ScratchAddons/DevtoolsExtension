@@ -9,6 +9,39 @@ const path = document.querySelector("script[id='devtools-extension-module']").ge
 const getURL = (x) => `${path}${x}`;
 const scriptUrl = getURL(`addon/${MAIN_JS}`);
 
+class WaitForElementSingleton {
+  constructor() {
+    this._waitForElementSet = new WeakSet();
+    this.getBindedFunc = () => this.waitForElement.bind(this);
+  }
+  waitForElement(selector, opts = {}) {
+    // Identical to SA
+    const markAsSeen = !!opts.markAsSeen;
+    const firstQuery = document.querySelectorAll(selector);
+    for (const element of firstQuery) {
+      if (this._waitForElementSet.has(element)) continue;
+      if (markAsSeen) this._waitForElementSet.add(element);
+      return Promise.resolve(element);
+    }
+    return new Promise((resolve) =>
+      new MutationObserver((mutationsList, observer) => {
+        const elements = document.querySelectorAll(selector);
+        for (const element of elements) {
+          if (this._waitForElementSet.has(element)) continue;
+          observer.disconnect();
+          resolve(element);
+          if (markAsSeen) this._waitForElementSet.add(element);
+          break;
+        }
+      }).observe(document.documentElement, {
+        attributes: false,
+        childList: true,
+        subtree: true,
+      })
+    );
+  }
+}
+
 const addon = {
   self: {
     _isDevtoolsExtension: true,
@@ -18,6 +51,50 @@ const addon = {
       get vm() {
         return Object.values(document.querySelector('div[class^="stage-wrapper_stage-wrapper_"]')).find((x) => x.child)
           .child.child.child.stateNode.props.vm;
+      },
+
+      // All of these are needed for getBlockly()
+      _cache: Object.create(null),
+      _getEditorMode() {
+        const isWWW = !!document.querySelector("meta[name='format-detection']");
+        const editorMode = (() => {
+          const pathname = location.pathname.toLowerCase();
+          const split = pathname.split("/").filter(Boolean);
+          if (!split[0] || split[0] !== "projects") return null;
+          if (split.includes("editor")) return "editor";
+          if (split.includes("fullscreen")) return "fullscreen";
+          if (split.includes("embed")) return "embed";
+          return "projectpage";
+        })();
+        return isWWW && editorMode;
+      },
+      _waitForElement: new WaitForElementSingleton().getBindedFunc(),
+      _react_internal_key: undefined,
+      get REACT_INTERNAL_PREFIX() {
+        return "__reactInternalInstance$";
+      },
+
+      async getBlockly() {
+        // Identical to SA
+        if (this._cache.Blockly) return this._cache.Blockly;
+        const editorMode = this._getEditorMode();
+        if (!editorMode || editorMode === "embed") throw new Error("Cannot access Blockly on this page");
+        const BLOCKS_CLASS = '[class^="gui_blocks-wrapper"]';
+        let elem = document.querySelector(BLOCKS_CLASS);
+        if (!elem) {
+          elem = await this._waitForElement(BLOCKS_CLASS);
+        }
+        if (!this._react_internal_key) {
+          this._react_internal_key = Object.keys(elem).find((key) => key.startsWith(this.REACT_INTERNAL_PREFIX));
+        }
+        const internal = elem[this._react_internal_key];
+        let childable = internal;
+        /* eslint-disable no-empty */
+        while (
+          ((childable = childable.child), !childable || !childable.stateNode || !childable.stateNode.ScratchBlocks)
+        ) {}
+        /* eslint-enable no-empty */
+        return (this._cache.Blockly = childable.stateNode.ScratchBlocks);
       },
     },
     scratchClass(...args) {
