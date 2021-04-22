@@ -46,6 +46,13 @@ const addon = {
   self: {
     _isDevtoolsExtension: true,
   },
+  settings: {
+    get(settingName) {
+      const returnTrue = ["enableCleanUpPlus", "enablePasteBlocksAtMouse", "enableMiddleClickFinder"];
+      if (returnTrue.includes(settingName)) return true;
+      else throw "Invalid setting name";
+    },
+  },
   tab: {
     traps: {
       get vm() {
