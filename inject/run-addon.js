@@ -157,11 +157,13 @@ const addon = {
   },
 };
 
-const langCode = `; ${document.cookie}`.split("; scratchlanguage=").pop().split(";").shift() || navigator.language;
+const langCode = (
+  `; ${document.cookie}`.split("; scratchlanguage=").pop().split(";").shift() || navigator.language
+).toLowerCase();
 function getL10NURLs() {
   // Note: not identical to Scratch Addons function
   const urls = [getURL(`l10n/${langCode}`)];
-  if (langCode === "pt") {
+  if (langCode.startsWith("pt") && langCode !== "pt-br") {
     urls.push(getURL(`addons-l10n/pt-br`));
   }
   if (langCode.includes("-")) {
