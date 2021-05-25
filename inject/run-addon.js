@@ -54,6 +54,7 @@ const addon = {
     },
   },
   tab: {
+    waitForElement: new WaitForElementSingleton().getBindedFunc(),
     traps: {
       get vm() {
         return Object.values(document.querySelector('div[class^="stage-wrapper_stage-wrapper_"]')).find((x) => x.child)
