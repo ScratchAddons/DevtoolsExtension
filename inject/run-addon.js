@@ -42,6 +42,13 @@ class WaitForElementSingleton {
   }
 }
 
+const langCode = (
+  `; ${document.cookie}`.split("; scratchlanguage=").pop().split(";").shift() || navigator.language
+).toLowerCase();
+
+const rtlLocales = ["ar", "ckb", "fa", "he"];
+const direction = rtlLocales.includes(langCode.split("-")[0]) ? "rtl" : "ltr";
+
 const addon = {
   self: {
     _isDevtoolsExtension: true,
@@ -54,6 +61,7 @@ const addon = {
     },
   },
   tab: {
+    direction,
     waitForElement: new WaitForElementSingleton().getBindedFunc(),
     traps: {
       get vm() {
@@ -158,9 +166,6 @@ const addon = {
   },
 };
 
-const langCode = (
-  `; ${document.cookie}`.split("; scratchlanguage=").pop().split(";").shift() || navigator.language
-).toLowerCase();
 function getL10NURLs() {
   // Note: not identical to Scratch Addons function
   const urls = [getURL(`l10n/${langCode}`)];
