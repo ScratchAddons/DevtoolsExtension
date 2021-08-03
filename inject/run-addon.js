@@ -1,11 +1,13 @@
 import Localization from "./l10n.js";
 
-// Make sure SA doesn't run editor-devtools
+const scriptEl = document.querySelector("script[id='devtools-extension-module']");
+
 window.initGUI = true;
+window.devtoolsExtensionVersion = scriptEl.getAttribute("data-version");
 
 const MAIN_JS = "userscript.js";
 
-const path = document.querySelector("script[id='devtools-extension-module']").getAttribute("data-path");
+const path = scriptEl.getAttribute("data-path");
 const getURL = (x) => `${path}${x}`;
 const scriptUrl = getURL(`addon/${MAIN_JS}`);
 
@@ -49,6 +51,8 @@ const langCode = (
 const rtlLocales = ["ar", "ckb", "fa", "he"];
 const direction = rtlLocales.includes(langCode.split("-")[0]) ? "rtl" : "ltr";
 
+const contextMenuCallbacks = [];
+
 const addon = {
   self: {
     _isDevtoolsExtension: true,
@@ -58,6 +62,9 @@ const addon = {
       const returnTrue = ["enableCleanUpPlus", "enablePasteBlocksAtMouse", "enableMiddleClickFinder"];
       if (returnTrue.includes(settingName)) return true;
       else throw "Invalid setting name";
+    },
+    addEventListener() {
+      //
     },
   },
   tab: {
@@ -163,8 +170,51 @@ const addon = {
       res = res.replace(/"/g, "");
       return res;
     },
+
+    createBlockContextMenu(callback, { workspace = false, blocks = false, flyout = false, comments = false } = {}) {
+      contextMenuCallbacks.push({ addonId: this._addonId, callback, workspace, blocks, flyout, comments });
+    },
   },
 };
+
+// Trap contextMenu.show ASAP
+// This will likely trap before SA, but probably not 100% guaranteed
+addon.tab.traps.getBlockly().then((blockly) => {
+  const oldShow = blockly.ContextMenu.show;
+  blockly.ContextMenu.show = function (event, items, rtl) {
+    const gesture = blockly.mainWorkspace.currentGesture_;
+    const block = gesture.targetBlock_;
+
+    for (const { callback, workspace, blocks, flyout, comments } of contextMenuCallbacks) {
+      let injectMenu =
+        // Workspace
+        (workspace && !block && !gesture.flyout_ && !gesture.startBubble_) ||
+        // Block in workspace
+        (blocks && block && !gesture.flyout_) ||
+        // Block in flyout
+        (flyout && gesture.flyout_) ||
+        // Comments
+        (comments && gesture.startBubble_);
+      if (injectMenu) {
+        try {
+          items = callback(items, block);
+        } catch (e) {
+          console.error("Error while calling context menu callback: ", e);
+        }
+      }
+    }
+
+    oldShow.call(this, event, items, rtl);
+
+    items.forEach((item, i) => {
+      if (item.separator) {
+        const itemElt = document.querySelector(".blocklyContextMenu").children[i];
+        itemElt.style.paddingTop = "2px";
+        itemElt.style.borderTop = "1px solid hsla(0, 0%, 0%, 0.15)";
+      }
+    });
+  };
+});
 
 function getL10NURLs() {
   // Note: not identical to Scratch Addons function

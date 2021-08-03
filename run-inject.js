@@ -16,4 +16,5 @@ function onHeadAvailable() {
   script.type = "module";
   script.src = chrome.runtime.getURL("inject/run-addon.js");
   document.head.appendChild(script);
+  script.setAttribute("data-version", chrome.runtime.getManifest().version);
 }
