@@ -18,3 +18,18 @@ function onHeadAvailable() {
   document.head.appendChild(script);
   script.setAttribute("data-version", chrome.runtime.getManifest().version);
 }
+
+window.addEventListener(
+  "scratchAddonsDevtoolsAddonStopped",
+  () => {
+    // Only run once per month
+    const month = new Date().getUTCMonth() + 1;
+    const year = new Date().getUTCFullYear();
+    const localStorageKey = `scratchAddonsDevtoolsUninstalled-${year}-${month}`;
+    if (!localStorage.getItem(localStorageKey)) {
+      localStorage.setItem(localStorageKey, "1");
+      chrome.runtime.sendMessage("uninstall");
+    }
+  },
+  { once: true }
+);
