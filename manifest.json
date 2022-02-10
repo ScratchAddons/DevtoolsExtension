@@ -4,7 +4,7 @@
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "author": "Griffpatch",
-  "version": "1.25.0",
+  "version": "1.24.3",
   "homepage_url": "https://www.griffpatch.co.uk",
   "icons": {
     "32": "images/favicon.png",
